@@ -10,11 +10,16 @@ This plugin helps you to add and manage simple text ads at the end of posts.
 
 == Description ==
 
-Simple plugin to manage text ads separately from your posts' text.
+This plugin helps you to add and manage simple text ads at the end of posts
 
-You may disable ads for main page, single posts or feed. It's possible to disable ads for registered users too.
+Abilities:
 
-Customizeble view via css, «optimized» variant included: no css where no ads.
+*   Managing ads text separately from post test
+*   Ability to hide advertisements for registered users
+*   Ability to hide ads on home page, post page and in feed
+*   Ability to change ads style (with «economical» mode)
+
+An «economical mode» means that css for ads not including when it’s not necessary.
 
 See screenshots for more details.
 
