@@ -3,7 +3,7 @@
 Plugin Name: PostAds
 Plugin URI: http://bobrik.name/
 Description: Add and manage ads of your posts
-Version: 0.3
+Version: 0.4
 Author: Ivan Babrou <ibobrik@gmail.com>
 Author URI: http://bobrik.name/
 

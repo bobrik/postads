@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=ibobr
 Tags: bbPress, post, comment, integration, forum, syncronization, sync, synchronization
 Requires at least: 2.5.0
 Tested up to: 2.8.2
-Stable tag: 0.3
+Stable tag: 0.4
 
 This plugin helps you to add and manage simple text ads at the end of posts.
 
