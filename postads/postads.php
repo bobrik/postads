@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: PostAds
-Plugin URI: http://bobrik.name/
+Plugin URI: http://bobrik.name/code/wordpress/postads/
 Description: Add and manage ads of your posts
-Version: 0.4
+Version: 0.5
 Author: Ivan Babrou <ibobrik@gmail.com>
 Author URI: http://bobrik.name/
 
@@ -38,16 +38,45 @@ function postads_install()
 function postads_post_options()
 {
 	global $post;
-	echo '<div class="postbox"><h3>'.__('Post Ads', 'postads').
-		'</h3><div class="inside"><p>'.
-		'<textarea name="postads_text" style="width:100%">'.get_post_meta($post->ID, 'postads_text', true).'</textarea>'.
-		'</p></div></div>';
+	$display_options = array(
+		'postads_index' => 'Show ads on main page',
+		'postads_single' => 'Show on post page',
+		'postads_rss' => 'Show in RSS',
+		'postads_hide_registered' => 'Hide for registered'
+	);
+	echo '<div class="postbox"><h3>Post Ads</h3>'.
+		'<div class="inside">'.
+		'<p><textarea name="postads_text" style="width:100%">'.get_post_meta($post->ID, 'postads_text', true).'</textarea></p>'.
+		'<h5>Display settings</h5>'.
+		'<p><input type="radio" name="postads_display_type" id="postads_display_default" value="default"'.(get_post_meta($post->ID, 'postads_display_type', true) == 'custom' ? '':' checked="checked"').' onChange="document.getElementById(\'postads_custom\').style.display=\'none\'" /> <label for="postads_display_default">Default settings</label><br/>'.
+		'<input type="radio" name="postads_display_type" id="postads_display_custom" value="custom" onChange="document.getElementById(\'postads_custom\').style.display=\'\'"'.(get_post_meta($post->ID, 'postads_display_type', true) == 'custom' ? ' checked="checked"':'').' /> <label for="postads_display_custom">Custom settings</label></p>'.
+		'<p id="postads_custom" style="'.(get_post_meta($post->ID, 'postads_display_type', true) == 'custom' ? '':'display:none;').'padding-left: 10px;">';
+		foreach ($display_options as $id => $text)
+		{
+			echo '<input type="checkbox" id="'.$id.'" name="'.$id.'"';
+			if (get_post_meta($post->ID, $id, true) == 'enabled')
+				echo ' checked="checked"';
+			echo '> <label for="'.$id.'">'.$text.'</label><br/>';
+		}
+		echo '</p>'.
+		'<h5>Max post ads count</h5>'.
+		'<p><input type="radio" name="postads_ads_count_type" id="postads_ads_count_default"'.(get_post_meta($post->ID, 'postads_ads_count_type', true) == 'custom' ? '':' checked="checked"').' value="default" /> <label for="postads_ads_count_default">Default ('.get_option('postads_max_per_post').')</label><br/>'.
+		'<input type="radio" name="postads_ads_count_type" id="postads_ads_count_custom"'.(get_post_meta($post->ID, 'postads_ads_count_type', true) == 'custom' ? ' checked="checked"':'').' value="custom" /> <label for="postads_ads_count_custom">Special for post: </label> <input type="text" size="2" name="postads_ads_count" value="'.get_post_meta($post->ID, 'postads_ads_count', true).'" />'.
+		'</p>'.
+		'</div></div>';
+
 }
 
 function postads_store_post_options($post_id)
 {
-	if (isset($_POST['postads_text'])) // change only if showed
-		update_post_meta($post_id, 'postads_text', $_POST['postads_text']);
+	foreach (array('postads_text', 'postads_display_type', 'postads_ads_count_type', 'postads_ads_count') as $option)
+		if (isset($_POST[$option]))
+			update_post_meta($post_id, $option, $_POST[$option]);
+	foreach (array('postads_index', 'postads_single', 'postads_rss', 'postads_hide_registered') as $option)
+		if (isset($_POST[$option]))
+			update_post_meta($post_id, $option, 'enabled');
+		else
+			update_post_meta($post_id, $option, 'disabled');
 }
 
 function postads_add_content($text)
@@ -60,31 +89,32 @@ function postads_add_content($text)
 function postads_need_to_show()
 {
 	global $post;
+	$custom_display_options = get_post_meta($post->ID, 'postads_display_type', true) == 'custom' ? true : false;
 	$ads = get_post_meta($post->ID, 'postads_text', true);
-	if (empty($ads))
-		return false;
-	if (is_feed())
-		if (get_option('postads_rss') != 'enabled')
-			return false;
-		else
-			return true;
-	if (is_home())
-		if (get_option('postads_index')  != 'enabled')
-			return false;
-		else
-			return true;
-	if (is_single())
-		if (get_option('postads_single') != 'enabled')
-			return false;
-		else
-			return true;
-	if (get_option('postads_hide_registered') == 'enabled')
+	if (($custom_display_options && get_post_meta($post->ID, 'postads_hide_registered', true) == 'enabled') || get_option('postads_hide_registered') == 'enabled')
 	{
 		global $user_ID;
 		get_currentuserinfo();
 		if ($user_ID)
 			return false;
 	}
+	if (empty($ads))
+		return false;
+	if (is_feed())
+		if (($custom_display_options && get_post_meta($post->ID, 'postads_rss', true) != 'enabled') || get_option('postads_rss') != 'enabled')
+			return false;
+		else
+			return true;
+	if (is_home())
+		if (($custom_display_options && get_post_meta($post->ID, 'postads_index', true) != 'enabled') || get_option('postads_index') != 'enabled')
+			return false;
+		else
+			return true;
+	if (is_single())
+		if (($custom_display_options && get_post_meta($post->ID, 'postads_single', true) != 'enabled') || get_option('postads_single') != 'enabled')
+			return false;
+		else
+			return true;
 	return true;
 }
 
@@ -118,11 +148,44 @@ function postads_options_page()
 	}
 }
 
+function postads_columns($defaults)
+{
+	$defaults['postads'] = 'Post Ads';
+	return $defaults;
+}
+
+function postads_custom_column($column_name)
+{
+	global $post;
+	if ($column_name == 'postads')
+	{
+		$text = get_post_meta($post->ID, 'postads_text', true);
+		if (!trim($text))
+			$count = 0;
+		else
+			$count = count(explode("\n\r\n", $text));
+		if (get_post_meta($post->ID, 'postads_ads_count_type', true) == 'custom')
+			$maxcount = get_post_meta($post->ID, 'postads_ads_count', true);
+		else
+			$maxcount = get_option('postads_max_per_post');
+		if ($maxcount < $count)
+			$color = '#cc0000';
+		elseif ($count < $maxcount)
+			$color = '#3465a4';
+		else
+			$color = '#4e9a06';
+		echo '<p style="text-align:center;color:'.$color.'">';
+		echo 'Current: '.$count.', Max: '.$maxcount;
+		echo '</p>';
+	}
+}
+
 function postads_config() {
 	if (isset($_POST['stage']) && $_POST['stage'] == 'process')
 	{
 		if (function_exists('current_user_can') && !current_user_can('manage_options'))
 			die(__('Cheatin&#8217; uh?'));
+		update_option('postads_max_per_post', $_POST['postads_max_per_post']);
 		update_option('postads_css_source', $_POST['postads_css_source']);
 		update_option('postads_own_css', $_POST['postads_own_css']);
 		update_option('postads_rss', $_POST['postads_rss'] == 'on' ? 'enabled' : 'disabled');
@@ -137,6 +200,12 @@ function postads_config() {
 	<form name="form1" method="post" action="">
 	<input type="hidden" name="stage" value="process" />
 	<table width="100%" cellspacing="2" cellpadding="5" class="form-table">
+		<tr valign="baseline">
+			<th scope="row">Max post ads count per post</th>
+			<td>
+				<input type="text" size="2" name="postads_max_per_post" value="<?php echo get_option('postads_max_per_post'); ?>" /> (If «System», use <strong>postads</strong> css class in your theme CSS. «Provided below» is optimal)
+			</td>
+		</tr>
 		<tr valign="baseline">
 			<th scope="row">CSS source</th>
 			<td>
@@ -172,10 +241,12 @@ add_action('edit_form_advanced', 'postads_post_options');
 add_action('draft_post', 'postads_store_post_options');
 add_action('publish_post', 'postads_store_post_options');
 add_action('save_post', 'postads_store_post_options');
+add_action('manage_posts_custom_column', 'postads_custom_column');
 
 add_action('admin_menu', 'postads_options_page');
 
 add_filter('wp_head', 'postads_styles');
 add_filter('the_content', 'postads_add_content', 5);
+add_filter('manage_posts_columns', 'postads_columns');
 
 ?>
