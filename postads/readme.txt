@@ -3,8 +3,8 @@ Contributors: bobrik
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=ibobrik@gmail.com&lc=US&item_name=PostAds%20plugin&currency_code=USD&bn=PP-DonationsBF:btn_donateCC_LG.gif:NonHostedGuest
 Tags: post, advertisement, ads
 Requires at least: 2.5.0
-Tested up to: 2.8.2
-Stable tag: 0.5
+Tested up to: 2.8.4
+Stable tag: 0.6
 
 This plugin helps you to add and manage simple text ads at the end of posts.
 
