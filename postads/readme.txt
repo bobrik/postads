@@ -27,6 +27,12 @@ See screenshots for more details.
 
 == Changelog ==
 
+Version 0.6 (18.08.2009)
+
+*  Bugfixes & code cleanups
+*  Correct default options setting
+*  Screenshot updates
+
 Version 0.5 (15.08.2009)
 
 *  Custom post ads display options for every post
@@ -50,3 +56,4 @@ Version 0.2 (30.07.2009):
 
 1. Plugin settings page
 2. Ads example at the end of the post (default css)
+3. Additional column in Posts->Edit admin page

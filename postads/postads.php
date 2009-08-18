@@ -3,7 +3,7 @@
 Plugin Name: PostAds
 Plugin URI: http://bobrik.name/code/wordpress/postads/
 Description: Add and manage ads of your posts
-Version: 0.5
+Version: 0.6
 Author: Ivan Babrou <ibobrik@gmail.com>
 Author URI: http://bobrik.name/
 
@@ -27,12 +27,18 @@ Boston, MA 02111-1307, USA.
 
 function postads_install()
 {
-	update_option('postads_css_source', 'default');
-	update_option('postads_own_css', '');
-	update_option('postads_rss', 'disabled');
-	update_option('postads_single', 'enabled');
-	update_option('postads_index', 'disabled');
-	update_option('postads_hide_registered', 'enabled');
+	$defaults = array(
+		'postads_css_source' => 'default',
+		'postads_own_css' => '',
+		'postads_rss' => 'disabled',
+		'postads_single' => 'enabled',
+		'postads_index' => 'disabled',
+		'postads_hide_registered' => 'enabled',
+		'postads_max_per_post' => 5
+	);
+	foreach ($defaults as $option => $value)
+	if (!get_option($option))
+		update_option($option, $value);
 }
 
 function postads_post_options()
@@ -101,21 +107,30 @@ function postads_need_to_show()
 	if (empty($ads))
 		return false;
 	if (is_feed())
-		if (($custom_display_options && get_post_meta($post->ID, 'postads_rss', true) != 'enabled') || get_option('postads_rss') != 'enabled')
+		if (!check_post_option($custom_display_options, 'postads_rss'))
 			return false;
 		else
 			return true;
 	if (is_home())
-		if (($custom_display_options && get_post_meta($post->ID, 'postads_index', true) != 'enabled') || get_option('postads_index') != 'enabled')
+		if (!check_post_option($custom_display_options, 'postads_index'))
 			return false;
 		else
 			return true;
 	if (is_single())
-		if (($custom_display_options && get_post_meta($post->ID, 'postads_single', true) != 'enabled') || get_option('postads_single') != 'enabled')
+		if (!check_post_option($custom_display_options, 'postads_single'))
 			return false;
 		else
 			return true;
 	return true;
+}
+
+function check_post_option($custom_display_options, $option)
+{
+	// returns false to show ads, true to hide
+	if (($custom_display_options && get_post_meta($post->ID, $option, true) != '' && get_post_meta($post->ID, $option, true) != 'enabled') || get_option($option) != 'enabled')
+		return false;
+	else
+		return true;
 }
 
 function postads_styles()
@@ -159,11 +174,11 @@ function postads_custom_column($column_name)
 	global $post;
 	if ($column_name == 'postads')
 	{
-		$text = get_post_meta($post->ID, 'postads_text', true);
+		$text = str_replace("\r", '', get_post_meta($post->ID, 'postads_text', true));
 		if (!trim($text))
 			$count = 0;
 		else
-			$count = count(explode("\n\r\n", $text));
+			$count = count(explode("\n\n", $text));
 		if (get_post_meta($post->ID, 'postads_ads_count_type', true) == 'custom')
 			$maxcount = get_post_meta($post->ID, 'postads_ads_count', true);
 		else
@@ -174,7 +189,7 @@ function postads_custom_column($column_name)
 			$color = '#3465a4';
 		else
 			$color = '#4e9a06';
-		echo '<p style="text-align:center;color:'.$color.'">';
+		echo '<p style="color:'.$color.'">';
 		echo 'Current: '.$count.', Max: '.$maxcount;
 		echo '</p>';
 	}
@@ -203,7 +218,7 @@ function postads_config() {
 		<tr valign="baseline">
 			<th scope="row">Max post ads count per post</th>
 			<td>
-				<input type="text" size="2" name="postads_max_per_post" value="<?php echo get_option('postads_max_per_post'); ?>" /> (If «System», use <strong>postads</strong> css class in your theme CSS. «Provided below» is optimal)
+				<input type="text" size="2" name="postads_max_per_post" value="<?php echo get_option('postads_max_per_post'); ?>" />
 			</td>
 		</tr>
 		<tr valign="baseline">
